@@ -1,205 +1,210 @@
 local Players = game:GetService("Players")
+local HttpService = game:GetService("HttpService")
+local RunService = game:GetService("RunService")
+
 local player = Players.LocalPlayer
-local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
-gui.Name = "ByChristian_UI"
-gui.ResetOnSpawn = false
 
--- 💥 Mensaje de Inicio
-local msg = Instance.new("TextLabel", gui)
-msg.Size = UDim2.new(1, 0, 1, 0)
-msg.BackgroundColor3 = Color3.new(0, 0, 0)
-msg.Text = "By Christian"
-msg.TextScaled = true
-msg.TextColor3 = Color3.new(1, 1, 1)
-msg.Font = Enum.Font.Arcade
-task.delay(2.5, function()
-	msg:Destroy()
-end)
-
--- 🔐 Solicitar código
-local passFrame = Instance.new("Frame", gui)
-passFrame.Size = UDim2.new(0.3, 0, 0.2, 0)
-passFrame.Position = UDim2.new(0.35, 0, 0.4, 0)
-passFrame.BackgroundColor3 = Color3.fromRGB(30,30,30)
-passFrame.BorderSizePixel = 0
-
-local passBox = Instance.new("TextBox", passFrame)
-passBox.Size = UDim2.new(0.8, 0, 0.4, 0)
-passBox.Position = UDim2.new(0.1, 0, 0.2, 0)
-passBox.PlaceholderText = "Ingresa la clave"
-passBox.Text = ""
-passBox.TextScaled = true
-passBox.Font = Enum.Font.Arcade
-passBox.TextColor3 = Color3.new(1,1,1)
-passBox.BackgroundColor3 = Color3.fromRGB(50,50,50)
-
-local confirm = Instance.new("TextButton", passFrame)
-confirm.Size = UDim2.new(0.5, 0, 0.3, 0)
-confirm.Position = UDim2.new(0.25, 0, 0.65, 0)
-confirm.Text = "Entrar"
-confirm.Font = Enum.Font.Arcade
-confirm.TextScaled = true
-confirm.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
-confirm.TextColor3 = Color3.new(1,1,1)
-
--- 🌈 Rainbow
-local function rainbow()
+-- 🌈 Rainbow función
+local function rainbowColor()
 	local t = tick()
 	return Color3.fromRGB(
-		math.sin(t) * 127 + 128,
-		math.sin(t + 2 * math.pi / 3) * 127 + 128,
-		math.sin(t + 4 * math.pi / 3) * 127 + 128
+		math.floor(math.sin(t) * 127 + 128),
+		math.floor(math.sin(t + 2) * 127 + 128),
+		math.floor(math.sin(t + 4) * 127 + 128)
 	)
 end
 
--- 🎮 Panel Principal
-local iconBtn = Instance.new("TextButton", gui)
-iconBtn.Size = UDim2.new(0, 50, 0, 50)
-iconBtn.Position = UDim2.new(0, 20, 0, 20)
-iconBtn.Text = "C"
-iconBtn.Font = Enum.Font.Arcade
-iconBtn.TextScaled = true
-iconBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-iconBtn.TextColor3 = Color3.new(1, 1, 1)
-iconBtn.Visible = false
-iconBtn.Draggable = true
+-- 🧠 Verificación de contraseña (con linkvertise)
+local function solicitarContraseña()
+	local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+	gui.Name = "LoginUI"
 
-local mainPanel = Instance.new("ScrollingFrame", gui)
-mainPanel.Size = UDim2.new(0.6, 0, 0.8, 0)
-mainPanel.Position = UDim2.new(0.2, 0, 0.1, 0)
-mainPanel.CanvasSize = UDim2.new(0, 0, 2, 0)
-mainPanel.ScrollBarThickness = 8
-mainPanel.BackgroundColor3 = Color3.fromRGB(15,15,15)
-mainPanel.Visible = false
-mainPanel.Draggable = true
-mainPanel.Active = true
+	local frame = Instance.new("Frame", gui)
+	frame.Size = UDim2.new(0, 300, 0, 150)
+	frame.Position = UDim2.new(0.5, -150, 0.5, -75)
+	frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+	Instance.new("UICorner", frame)
 
-local uilist = Instance.new("UIListLayout", mainPanel)
-uilist.Padding = UDim.new(0, 8)
-uilist.SortOrder = Enum.SortOrder.LayoutOrder
+	local label = Instance.new("TextLabel", frame)
+	label.Size = UDim2.new(1, 0, 0.4, 0)
+	label.Position = UDim2.new(0, 0, 0, 0)
+	label.Text = "Ingresa el código desde:\nhttps://direct-link.net/1368874/wNwAURpoRoSy"
+	label.TextScaled = true
+	label.TextWrapped = true
+	label.TextColor3 = Color3.new(1,1,1)
+	label.Font = Enum.Font.Gotham
+	label.BackgroundTransparency = 1
 
--- 🔎 Barra de búsqueda
-local searchBox = Instance.new("TextBox", mainPanel)
-searchBox.Size = UDim2.new(1, -10, 0, 40)
-searchBox.Text = ""
-searchBox.PlaceholderText = "Buscar script..."
-searchBox.Font = Enum.Font.Arcade
-searchBox.TextScaled = true
-searchBox.TextColor3 = Color3.new(1,1,1)
-searchBox.BackgroundColor3 = Color3.fromRGB(30,30,30)
+	local textbox = Instance.new("TextBox", frame)
+	textbox.Size = UDim2.new(0.8, 0, 0.2, 0)
+	textbox.Position = UDim2.new(0.1, 0, 0.45, 0)
+	textbox.PlaceholderText = "Código aquí"
+	textbox.TextScaled = true
+	textbox.Font = Enum.Font.Gotham
+	textbox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+	textbox.TextColor3 = Color3.new(1,1,1)
+	Instance.new("UICorner", textbox)
 
--- 📁 Función para crear una carpeta (botón de sección)
-function crearCarpeta(nombre, scripts)
-	local folderBtn = Instance.new("TextButton", mainPanel)
-	folderBtn.Size = UDim2.new(1, -10, 0, 50)
-	folderBtn.Text = "📁 " .. nombre
-	folderBtn.Font = Enum.Font.Arcade
-	folderBtn.TextScaled = true
-	folderBtn.BackgroundColor3 = Color3.fromRGB(50,50,50)
-	folderBtn.TextColor3 = Color3.new(1,1,1)
+	local boton = Instance.new("TextButton", frame)
+	boton.Size = UDim2.new(0.5, 0, 0.2, 0)
+	boton.Position = UDim2.new(0.25, 0, 0.75, 0)
+	boton.Text = "Ingresar"
+	boton.TextScaled = true
+	boton.Font = Enum.Font.Gotham
+	boton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+	boton.TextColor3 = Color3.new(1,1,1)
+	Instance.new("UICorner", boton)
 
-	folderBtn.MouseButton1Click:Connect(function()
-		mainPanel:ClearAllChildren()
-		uilist.Parent = mainPanel
-		searchBox.Parent = mainPanel
-
-		for i, scr in pairs(scripts) do
-			local btn = Instance.new("TextButton", mainPanel)
-			btn.Size = UDim2.new(1, -10, 0, 45)
-			btn.Text = scr[1]
-			btn.Font = Enum.Font.Arcade
-			btn.TextScaled = true
-			btn.BackgroundColor3 = Color3.fromRGB(40,40,40)
-			btn.TextColor3 = Color3.new(1,1,1)
-			btn.MouseButton1Click:Connect(function()
-				loadstring(game:HttpGet(scr[2]))()
-			end)
+	boton.MouseButton1Click:Connect(function()
+		if textbox.Text == "AYAM" then
+			gui:Destroy()
+			cargarPanel()
+		else
+			textbox.Text = "❌ Código incorrecto"
 		end
-
-		local backBtn = Instance.new("TextButton", mainPanel)
-		backBtn.Size = UDim2.new(1, -10, 0, 45)
-		backBtn.Text = "🔙 Regresar"
-		backBtn.Font = Enum.Font.Arcade
-		backBtn.TextScaled = true
-		backBtn.BackgroundColor3 = Color3.fromRGB(100,30,30)
-		backBtn.TextColor3 = Color3.new(1,1,1)
-		backBtn.MouseButton1Click:Connect(function()
-			mainPanel:ClearAllChildren()
-			uilist.Parent = mainPanel
-			searchBox.Parent = mainPanel
-			cargarSecciones()
-		end)
 	end)
 end
 
--- 📚 Lista de scripts
-local juegosPopulares = {
-	{"🧠 Brainlot", "https://raw.githubusercontent.com/Akbar123s/Script-Roblox-/refs/heads/main/nabaruBrainrot"},
-	{"🚓 Jailbreak", "https://raw.githubusercontent.com/BlitzIsKing/UniversalFarm/main/Loader/Regular"},
-	{"🚂 Dead Rails", "https://raw.githubusercontent.com/gumanba/Scripts/refs/heads/main/DeadRails"},
-	{"🍉 Blox Fruits", "https://raw.githubusercontent.com/tlredz/Scripts/refs/heads/main/main.luau"},
-}
+-- 🎮 Panel principal (se carga tras verificación)
+function cargarPanel()
+	local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+	gui.Name = "ChristianHubUI"
+	gui.ResetOnSpawn = false
 
-local comandos = {
-	{"🚀 Fly V3", "https://raw.githubusercontent.com/XNEOFF/FlyGuiV3/main/FlyGuiV3.txt"},
-	{"🌀 Touch Fling", "https://rawscripts.net/raw/Universal-Script-TOUCH-FLING-ULTRA-POWER-30194"},
-	{"👁 ESP Player", "https://pastebin.com/raw/7HcQ3V3r"},
-	{"💻 Infinity Yield", "https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"},
-}
+	-- Ícono flotante con tu gorra CMLP
+	local icon = Instance.new("ImageButton", gui)
+	icon.Size = UDim2.new(0, 60, 0, 60)
+	icon.Position = UDim2.new(0, 20, 0, 20)
+	icon.Image = "rbxassetid://94777373855263"
+	icon.BackgroundTransparency = 1
+	icon.Draggable = true
 
-local generales = {
-	{"🌟 Fe Admin", "https://pastebin.com/raw/V5PQy3y0"},
-	{"🔒 Anti AFK", "https://pastebin.com/raw/1H8ZcHFk"},
-	{"💰 Auto Farm Sim", "https://pastebin.com/raw/vQfGSxTq"},
-	-- Agrega más scripts aquí (40 en total)
-}
+	-- 🧾 Panel vertical principal
+	local panel = Instance.new("Frame", gui)
+	panel.Size = UDim2.new(0, 400, 0, 500)
+	panel.Position = UDim2.new(0.5, -200, 0.5, -250)
+	panel.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+	panel.BackgroundTransparency = 0.4
+	panel.Visible = false
+	panel.Active = true
+	panel.Draggable = true
+	Instance.new("UICorner", panel)
+	local stroke = Instance.new("UIStroke", panel)
+	stroke.Thickness = 2
 
--- 🧩 Cargar carpetas
-function cargarSecciones()
-	crearCarpeta("Juegos Populares", juegosPopulares)
-	crearCarpeta("Comandos", comandos)
-	crearCarpeta("General", generales)
+	-- Título
+	local title = Instance.new("TextLabel", panel)
+	title.Size = UDim2.new(1, 0, 0, 40)
+	title.Text = "By Christian"
+	title.Font = Enum.Font.Arcade
+	title.TextScaled = true
+	title.TextColor3 = Color3.new(1,1,1)
+	title.BackgroundTransparency = 1
+
+	-- 🧾 Submenú contenedor scrollable
+	local scroll = Instance.new("ScrollingFrame", panel)
+	scroll.Size = UDim2.new(1, -10, 1, -60)
+	scroll.Position = UDim2.new(0, 5, 0, 50)
+	scroll.CanvasSize = UDim2.new(0, 0, 5, 0)
+	scroll.BackgroundTransparency = 1
+	scroll.ScrollBarThickness = 6
+
+	-- 🟨 Búsqueda
+	local buscar = Instance.new("TextBox", panel)
+	buscar.Size = UDim2.new(0.6, 0, 0, 30)
+	buscar.Position = UDim2.new(0.2, 0, 0, 10)
+	buscar.PlaceholderText = "Buscar script..."
+	buscar.TextScaled = true
+	buscar.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+	buscar.TextColor3 = Color3.new(1,1,1)
+	buscar.Font = Enum.Font.Gotham
+	Instance.new("UICorner", buscar)
+
+	-- 📂 Crear carpeta
+	local function crearCarpeta(nombre, scripts)
+		local folderBtn = Instance.new("TextButton", scroll)
+		folderBtn.Size = UDim2.new(0.9, 0, 0, 40)
+		folderBtn.Position = UDim2.new(0.05, 0, 0, #scroll:GetChildren() * 45)
+		folderBtn.Text = "📁 "..nombre
+		folderBtn.Font = Enum.Font.Arcade
+		folderBtn.TextScaled = true
+		folderBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+		folderBtn.TextColor3 = Color3.new(1,1,1)
+		Instance.new("UICorner", folderBtn)
+
+		folderBtn.MouseButton1Click:Connect(function()
+			scroll:ClearAllChildren()
+			for i, s in pairs(scripts) do
+				local btn = Instance.new("TextButton", scroll)
+				btn.Size = UDim2.new(0.9, 0, 0, 40)
+				btn.Position = UDim2.new(0.05, 0, 0, (i-1)*45)
+				btn.Text = s[1]
+				btn.TextScaled = true
+				btn.Font = Enum.Font.Arcade
+				btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+				btn.TextColor3 = Color3.new(1,1,1)
+				Instance.new("UICorner", btn)
+
+				btn.MouseButton1Click:Connect(function()
+					loadstring(game:HttpGet(s[2]))()
+				end)
+			end
+
+			-- 🔙 Botón regresar
+			local back = Instance.new("TextButton", scroll)
+			back.Size = UDim2.new(0.9, 0, 0, 40)
+			back.Position = UDim2.new(0.05, 0, 0, #scripts*45 + 10)
+			back.Text = "⬅ Regresar"
+			back.TextScaled = true
+			back.Font = Enum.Font.Arcade
+			back.BackgroundColor3 = Color3.fromRGB(100, 30, 30)
+			back.TextColor3 = Color3.new(1,1,1)
+			Instance.new("UICorner", back)
+			back.MouseButton1Click:Connect(function()
+				gui:Destroy()
+				cargarPanel()
+			end)
+		end)
+	end
+
+	-- 📁 Carpetas y scripts (puedes añadir más)
+	crearCarpeta("Juegos Populares", {
+		{"🧠 Brainlot", "https://raw.githubusercontent.com/Akbar123s/Script-Roblox-/refs/heads/main/nabaruBrainrot"},
+		{"🚓 Jailbreak", "https://raw.githubusercontent.com/BlitzIsKing/UniversalFarm/main/Loader/Regular"},
+		{"🚂 Dead Rails", "https://raw.githubusercontent.com/gumanba/Scripts/refs/heads/main/DeadRails"},
+		{"🍉 Blox Fruits", "https://raw.githubusercontent.com/tlredz/Scripts/refs/heads/main/main.luau"}
+	})
+
+	crearCarpeta("Comandos", {
+		{"🚀 Fly V3", "https://raw.githubusercontent.com/XNEOFF/FlyGuiV3/main/FlyGuiV3.txt"},
+		{"🌀 Touch Fling", "https://rawscripts.net/raw/Universal-Script-TOUCH-FLING-ULTRA-POWER-30194"},
+		{"👁 ESP Player", "https://raw.githubusercontent.com/RandomAdamYT/public-scripts/main/ESP.lua"},
+		{"📜 Infinity Yield", "https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"}
+	})
+
+	crearCarpeta("General", {
+		{"🛡 AntiBan Test", "https://pastebin.com/raw/k8jz76kZ"},
+		{"💰 Auto Farm", "https://pastebin.com/raw/a23v7s8h"},
+		{"⚔ Combat Mode", "https://pastebin.com/raw/fzcvwm9D"},
+		-- puedes agregar hasta 40 aquí...
+	})
+
+	-- Mostrar / ocultar panel
+	icon.MouseButton1Click:Connect(function()
+		panel.Visible = not panel.Visible
+	end)
+
+	-- 🎨 Efecto rainbow
+	RunService.RenderStepped:Connect(function()
+		local color = rainbowColor()
+		title.TextColor3 = color
+		for _, v in pairs(scroll:GetChildren()) do
+			if v:IsA("TextButton") then
+				v.TextColor3 = color
+			end
+		end
+	end)
 end
 
--- 🟦 TikTok botón
-local tiktok = Instance.new("TextButton", mainPanel)
-tiktok.Size = UDim2.new(1, -10, 0, 40)
-tiktok.Text = "🎵 TikTok: @christ_sebast_7d"
-tiktok.Font = Enum.Font.Arcade
-tiktok.TextScaled = true
-tiktok.BackgroundColor3 = Color3.fromRGB(10,10,10)
-tiktok.TextColor3 = Color3.new(1,1,1)
-tiktok.MouseButton1Click:Connect(function()
-	setclipboard("https://www.tiktok.com/@christ_sebast_7d")
-end)
-
--- 🌈 Efecto rainbow
-game:GetService("RunService").RenderStepped:Connect(function()
-	local color = rainbow()
-	for _, v in pairs(mainPanel:GetDescendants()) do
-		if v:IsA("TextButton") or v:IsA("TextLabel") then
-			v.TextColor3 = color
-		end
-	end
-	iconBtn.TextColor3 = color
-end)
-
--- 🔐 Verificación de código
-confirm.MouseButton1Click:Connect(function()
-	if passBox.Text == "AYAM" then
-		passFrame:Destroy()
-		iconBtn.Visible = true
-	else
-		passBox.PlaceholderText = "Código incorrecto"
-		passBox.Text = ""
-	end
-end)
-
-iconBtn.MouseButton1Click:Connect(function()
-	mainPanel.Visible = not mainPanel.Visible
-	mainPanel:ClearAllChildren()
-	uilist.Parent = mainPanel
-	searchBox.Parent = mainPanel
-	cargarSecciones()
-	tiktok.Parent = mainPanel
-end)
+-- ⚠ Inicia con contraseña
+solicitarContraseña()
